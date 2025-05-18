@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Kuis Multiplayer Real-Time</title>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.24.0/firebase-app.js";
+    import { getDatabase, ref, set, update, onValue } from "https://www.gstatic.com/firebasejs/9.24.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBvm7UyWXRPf0caU64I7oCStlSN8PDOsoY",
+      authDomain: "kuis-multiplayer.firebaseapp.com",
+      projectId: "kuis-multiplayer",
+      storageBucket: "kuis-multiplayer.firebasestorage.app",
+      messagingSenderId: "435482498030",
+      appId: "1:435482498030:web:0520081ca273d8033834ff",
+      measurementId: "G-M9ZWZREQRK",
+      databaseURL: "https://kuis-multiplayer-default-rtdb.firebaseio.com"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    let player = "";
+    let score = 0;
+
+    window.joinGame = function () {
+      player = document.getElementById("playerName").value.trim();
+      if (!player) return alert("Masukkan nama pemain!");
+      document.getElementById("player").innerText = player;
+      document.getElementById("gameArea").style.display = "block";
+
+      // Tambahkan player ke database
+      set(ref(db, "players/" + player), {
+        score: 0
+      });
+    };
+
+    window.submitAnswer = function () {
+      const answer = document.getElementById("answer").value.trim().toLowerCase();
+      if (answer === "tokyo") {
+        score += 10;
+        update(ref(db, "players/" + player), { score: score });
+        alert("Benar!");
+      } else {
+        alert("Salah!");
+      }
+    };
+
+    // Pantau skor secara real-time
+    onValue(ref(db, "players/" + player), (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        score = data.score;
+        document.getElementById("score").innerText = score;
+      }
+    });
+  </script>
+</head>
+<body>
+  <h1>Kuis Multiplayer Real-Time</h1>
+
+  <input type="text" id="playerName" placeholder="Masukkan nama pemain" />
+  <button onclick="joinGame()">Gabung Game</button>
+
+  <div id="gameArea" style="display:none;">
+    <p>Halo, <span id="player"></span>!</p>
+    <p><strong>Soal:</strong> Ibukota Jepang?</p>
+    <input type="text" id="answer" placeholder="Jawabanmu" />
+    <button onclick="submitAnswer()">Jawab</button>
+    <p>Skor kamu: <span id="score">0</span></p>
+  </div>
+</body>
+</html>
