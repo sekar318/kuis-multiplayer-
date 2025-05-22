@@ -1,4 +1,4 @@
-// Firebase config kamu (ganti pakai milikmu sendiri)
+// Firebase config kamu
 const firebaseConfig = {
   apiKey: "AIzaSyBvm7UyWXRPf0caU64I7oCStlSN8PDOsoY",
   authDomain: "kuis-multiplayer.firebaseapp.com",
@@ -15,7 +15,7 @@ const db = firebase.database();
 let namaPengguna = "";
 
 function masuk() {
-  namaPengguna = document.getElementById("username").value;
+  namaPengguna = document.getElementById("username").value.trim();
   if (namaPengguna === "") return alert("Isi nama dulu!");
   document.getElementById("login").style.display = "none";
   document.getElementById("kuis").style.display = "block";
@@ -23,14 +23,26 @@ function masuk() {
 }
 
 function ambilSoal() {
-  db.ref("soal").on("value", (snap) => {
+  db.ref("soal/teks").on("value", (snap) => {
     document.getElementById("soal").innerText = snap.val() || "Soal belum dibuat";
   });
 }
 
 function kirimJawaban() {
-  const jawaban = document.getElementById("jawaban").value;
+  const jawaban = document.getElementById("jawaban").value.trim();
   if (jawaban === "") return;
-  db.ref("jawaban/" + namaPengguna).set(jawaban);
-  document.getElementById("jawaban").value = "";
+
+  db.ref("soal/kunci").once("value").then((snap) => {
+    const kunci = snap.val();
+    const benar = jawaban.toLowerCase() === kunci.toLowerCase();
+    const status = benar ? "Benar" : "Salah";
+
+    db.ref("jawaban/" + namaPengguna).set({
+      jawaban: jawaban,
+      status: status
+    });
+
+    alert("Jawaban kamu: " + status);
+    document.getElementById("jawaban").value = "";
+  });
 }
